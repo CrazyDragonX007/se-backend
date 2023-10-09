@@ -4,17 +4,17 @@ const User = require("../models/User");
 
 // Handling user signup
 router.post("/register", async (req, res) => {
-  const username = req.query.username;
+  const username = req.body.username;
   const existing_user = await User.findOne({username: username});
   if(existing_user?.username===username){
     return res.status(400).json({error:"Username already exists"});
   }
   const user = await User.create({
     username: username,
-    password: req.query.password,
-    email: req.query.email,
-    contact: req.query.contact,
-    role: req.query.role
+    password: req.body.password,
+    email: req.body.email,
+    contact: req.body.contact,
+    role: req.body.role
   });
   return res.status(200).json(user);
 });
@@ -23,15 +23,20 @@ router.post("/register", async (req, res) => {
 router.post("/login", async function(req, res){
   try {
     // check if the user exists
-    const user = await User.findOne({ username: req.query.username });
+    const user = await User.findOne({ username: req.body.username });
     if (user) {
       //check if password matches
-      const result = req.query.password === user.password;
-      if (result) {
-        res.status(200).json({user});
-      } else {
-        res.status(400).json({ error: "password doesn't match" });
-      }
+      user.comparePassword(req.body.password, function (err,match){
+        if (err) {
+          console.log(err);
+          res.status(400).json({ error: "Some error occurred" });
+        }
+        if(match){
+          res.status(200).json({user});
+        }else{
+          res.status(400).json({ error: "password doesn't match" });
+        }
+      });
     } else {
       res.status(400).json({ error: "User doesn't exist" });
     }
@@ -47,4 +52,18 @@ router.get("/logout", function (req, res) {
     res.status(200).json({status:"successfully logged out"});
   });
 });
+
+router.post("/edit", async function (req, res) {
+  const username = req.body.username;
+  const existing_user = await User.findOne({username: username});
+  if (existing_user && existing_user.username === username) {
+    if(req.body.contact) existing_user.contact  = req.body.contact;
+    if(req.body.email) existing_user.email = req.body.email;
+    if(req.body.password) existing_user.password = req.body.password;
+    existing_user.save();
+    return res.status(200).json({status:"successfully updated profile"})
+  }
+  return res.status(400).json({error: "No such profile"});
+})
+
 module.exports = router;
