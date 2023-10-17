@@ -5,6 +5,7 @@ const logger = require('morgan');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
+const shiftsRouter = require('./routes/shifts');
 const mongoose = require("mongoose");
 
 const app = express();
@@ -14,9 +15,8 @@ mongoose.connect(db_string,{useNewUrlParser: true, useUnifiedTopology: true}).th
 
 const passport = require("passport"),
     bodyParser = require("body-parser"),
-    LocalStrategy = require("passport-local"),
-    passportLocalMongoose = require("passport-local-mongoose");
-const User = require("./models/User");
+    LocalStrategy = require("passport-local");
+const User = require("./models/user");
 
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -42,5 +42,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/shifts', shiftsRouter);
 
 module.exports = app;

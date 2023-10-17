@@ -6,7 +6,9 @@ const UserSchema = new mongoose.Schema({
     password: { type: String, required: true },
     email: String,
     contact: Number,
-    role:{type: String, required: true}
+    address: String,
+    role:{type: String, required: true},
+    approved: {type: Boolean, default: false}
 });
 
 UserSchema.pre("save", function(next) {
@@ -28,8 +30,6 @@ UserSchema.pre("save", function(next) {
             next();
         });
     });
-
-
 });
 
 UserSchema.methods.comparePassword = function(candidatePassword, cb) {
