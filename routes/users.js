@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require("../models/user");
 const mailer = require("../utils/mailer");
+const passport = require("passport");
 
 // Handling user signup
 router.post("/register", async (req, res) => {
@@ -33,30 +34,13 @@ router.post("/register", async (req, res) => {
 });
 
 //Handling user login
-router.post("/login", async function(req, res){
-  try {
-    // check if the user exists
-    const user = await User.findOne({ username: req.body.username });
-    if (user) {
-      //check if password matches
-      user.comparePassword(req.body.password, function (err,match){
-        if (err) {
-          console.log(err);
-          res.status(400).json({ error: "Some error occurred" });
-        }
-        if(match){
-          res.status(200).json({user});
-        }else{
-          res.status(400).json({ error: "password doesn't match" });
-        }
-      });
-    } else {
-      res.status(400).json({ error: "User doesn't exist" });
+router.post("/login",passport.authenticate("local"), async function(req, res){
+    // const user = req.user;
+    if(req.isAuthenticated){
+      res.status(200).json(req.user);
+    }else{
+      res.status(400).json({ error: "Some error occurred" });
     }
-  } catch (error) {
-    console.log(error);
-    res.status(400).json({ error });
-  }
 });
 
 //Handling user logout
@@ -136,5 +120,7 @@ router.get("/deny_users",(req,res)=>{
     return res.status(400).json({error:"some mails were not sent"});
   }
 });
+
+//TODO: add api to view list of approved volunteers
 
 module.exports = router;
