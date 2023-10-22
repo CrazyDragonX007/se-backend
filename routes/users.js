@@ -12,7 +12,7 @@ router.post("/register", async (req, res) => {
   if(existing_user?.username===username){
     return res.status(400).json({error:"Username already exists"});
   }
-  const user = await User.create({
+  User.create({
     username: username,
     password: req.body.password,
     name: req.body.name,
@@ -20,19 +20,25 @@ router.post("/register", async (req, res) => {
     contact: req.body.contact,
     address: req.body.address,
     role: req.body.role
-  });
-  if(user) {
-    const subject = "Thanks for signing up";
-    const body = 'Welcome to The Volunteer connection ' + user.name + '. You approval is pending with our administrator. Once approved, you will receive another email.';
-    const mail_sent = await mailer(user.email,subject,body);
-    if(mail_sent) {
-      return res.status(200).json(user);
-    }else{
-      await User.findOneAndDelete({username: username});
-      return res.status(400).json({error:"Some error occurred"});
-    }
-  }
-  else return res.status(400).json({error:"Some error occurred"});
+  }).then(async user=>{
+      if(user.role === 'admin') {
+        user.approved = true;
+        user.save();
+      }
+      const subject = "Thanks for signing up";
+      const body = 'Welcome to The Volunteer connection ' + user.name + '. You approval is pending with our administrator. Once approved, you will receive another email.';
+      const mail_sent = await mailer(user.email,subject,body);
+      if(mail_sent) {
+        return res.status(200).json(user);
+      }else{
+        await User.findOneAndDelete({username: username});
+        return res.status(400).json({error:"Some error occurred"});
+      }
+  }).catch(err=>{
+    console.log(err);
+    return res.status(400).json(err);
+  })
+
 });
 
 //Handling user login
@@ -95,7 +101,7 @@ router.get("/approve_users",async (req,res)=>{
           user.approved = true;
           user.save();
           const subject = 'Approved registration for The Volunteer Connection';
-          const body = 'Congratulations '+user.username+', your registration has been approved. You may now view and sign up for shifts on our website.'
+          const body = 'Congratulations '+user.name+', your registration has been approved. You may now view and sign up for shifts on our website.'
           const mail_sent = await mailer(user.email,subject,body);
           if(!mail_sent) {
             mails=false;
