@@ -94,8 +94,11 @@ router.get("/approve_users",async (req,res)=>{
   if(req.isAuthenticated()) {
     const adminCheck = await isAdmin(req);
     if (adminCheck) {
-      const usernames = req.query.usernames;
+      let usernames = req.query.usernames;
       let mails = true;
+      if(!Array.isArray(usernames)){
+        usernames = new Array([usernames])
+      }
       for(let i=0;i<usernames.length;i++){
         User.findOne({username:usernames[i]}).then(async user=>{
           user.approved = true;

@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const cors = require('cors');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -23,18 +22,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(cors());
-
+// app.use(cors({credentials:true,origin:'http://localhost:3000'}));
+// app.options('*', cors());
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(require("express-session")({
     secret: session_secret,
-    resave: false,
-    saveUninitialized: false
+    resave: true,
+    saveUninitialized: true
 }));
 
 app.use(passport.initialize());
-app.use(passport.session());
 
 passport.use(new LocalStrategy({passReqToCallback: true}, async (req, username, password, done) => {
             try {
@@ -42,11 +40,18 @@ passport.use(new LocalStrategy({passReqToCallback: true}, async (req, username, 
                 if (!user) return done("Incorrect username");
                user.comparePassword(password,(err,isMatch)=>{
                     if(isMatch){
+                        req.logIn(user,err=>{
+                            req.session.save(()=>console.log('x'));
+                            if(err) {
+                                console.log(err);
+                            }
+                        });
                         return done(null, user);
                     }else{
                         return done("Incorrect password");
                     }
                 });
+
             } catch (error) {
                 console.log(error);
                 return done(error, false);
@@ -56,6 +61,18 @@ passport.use(new LocalStrategy({passReqToCallback: true}, async (req, username, 
 );
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
+app.use(passport.session());
+
+app.use(function (req, res, next) {
+    const allowedOrigins = ['http://localhost:3000'];
+    res.header('Access-Control-Allow-Origin', allowedOrigins);
+    res.header( 'Access-Control-Allow-Headers', 'withCredentials, Access-Control-Allow-Headers, Origin, X-Requested-With, X-AUTHENTICATION, X-IP, Content-Type, Accept, Access-Control-Request-Method, Access-Control-Request-Headers');
+    res.header( 'Access-Control-Allow-Methods', 'GET, OPTIONS, HEAD, POST, PUT, DELETE');
+    res.header( 'Access-Control-Allow-Credentials', true);
+
+    next();
+});
+
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);

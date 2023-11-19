@@ -9,7 +9,9 @@ const shiftSchema = new mongoose.Schema({
     req_skills: String,
     max_volunteers: {type: Number, required: true},
     assignedVolunteers: {type: [String], default:[] },
-    requests: {type: [String], default:[] }
+    requests: {type: [String], default:[] },
+    completed: {type: Boolean, default: false}
+    // if date.now() > date or( date.now = date and endtime < date.now().time )
 });
 
 module.exports = mongoose.model('Shift',shiftSchema);
