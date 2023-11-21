@@ -64,7 +64,7 @@ passport.deserializeUser(User.deserializeUser());
 app.use(passport.session());
 
 app.use(function (req, res, next) {
-    const allowedOrigins = ['http://localhost:3000'];
+    const allowedOrigins = ['*'];
     res.header('Access-Control-Allow-Origin', allowedOrigins);
     res.header( 'Access-Control-Allow-Headers', 'withCredentials, Access-Control-Allow-Headers, Origin, X-Requested-With, X-AUTHENTICATION, X-IP, Content-Type, Accept, Access-Control-Request-Method, Access-Control-Request-Headers');
     res.header( 'Access-Control-Allow-Methods', 'GET, OPTIONS, HEAD, POST, PUT, DELETE');
