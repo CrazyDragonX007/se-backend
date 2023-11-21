@@ -7,6 +7,7 @@ const mailer = require("../utils/mailer");
 
 // Get all shifts by both admin and volunteer
 router.get('/shifts', async (req, res) => {
+    console.log(req.session);
     if (req.isAuthenticated() && req.user.approved === true) {
         Shift.find().then(shifts => res.status(200).json(shifts));
     } else {
