@@ -62,6 +62,7 @@ router.post("/edit", async function (req, res) {
   const username = req.body.username;
   if(!username){
     res.status(401).json({error:"No username given"});
+    return;
   }
   const existing_user = await User.findOne({username: username});
   if (existing_user && existing_user.username === username) {
@@ -81,6 +82,7 @@ router.get("/pending_approval", async (req,res)=>{
   const username = req.query.username;
   if(!username){
     res.status(401).json({error:"No username given"});
+    return;
   }
   User.findOne({username: username}).then(usr=>{
     if(usr.role==='admin'){
@@ -105,6 +107,7 @@ router.get("/approve_users",async (req,res)=>{
   const username = req.query.username;
   if(!username){
     res.status(401).json({error:"No username given"});
+    return;
   }
   User.findOne({username: username}).then(usr=>{
     if(usr.role==='admin'){
@@ -129,6 +132,7 @@ router.get("/deny_users",async (req,res)=>{
   const username = req.query.username;
   if(!username){
     res.status(401).json({error:"No username given"});
+    return;
   }
   User.findOne({username: username}).then(usr=>{
     if(usr.role==='admin'){
@@ -164,6 +168,7 @@ router.get("/staff_list",async (req,res)=>{
   const username = req.query.username;
   if(!username){
     res.status(401).json({error:"No username given"});
+    return;
   }
   User.findOne({username: username}).then(usr=>{
     if(usr.role==='admin'){

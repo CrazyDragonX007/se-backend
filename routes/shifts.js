@@ -7,8 +7,12 @@ const mailer = require("../utils/mailer");
 // Get all shifts by both admin and volunteer
 router.get('/shifts', async (req, res) => {
     const username = req.query.username;
+    if(!username){
+        res.status(401).json({error:"No username given"});
+        return;
+    }
     User.findOne({username: username}).then(usr=>{
-        if(usr.role==='admin'){
+        if(usr.role==='admin' || (usr.role==='volunteer' && usr.approved===true)){
             Shift.find().then(shifts => res.status(200).json(shifts));
         }else {
             res.status(401).json({error: "Not an admin"});
@@ -22,9 +26,10 @@ router.get('/request', async (req, res) => {
     const shiftId = req.query.shiftid;
     if(!username){
         res.status(401).json({error:"No username given"});
+        return;
     }
     User.findOne({username: username}).then(usr=>{
-        if(usr.role==='volunteer'){
+        if(usr.role==='volunteer' && usr.approved===true){
             Shift.findById(shiftId).then(shift => {
                 shift.requests.push(usr._id);
                 shift.save();
@@ -41,6 +46,7 @@ router.get('/shift_requests', async (req, res) => {
     const username = req.query.username;
     if(!username){
         res.status(401).json({error:"No username given"});
+        return;
     }
     User.findOne({username: username}).then(usr=>{
         if(usr.role==='admin'){
@@ -71,6 +77,7 @@ router.post("/create", async function (req, res) {
     const username = req.query.username;
     if(!username){
         res.status(401).json({error:"No username given"});
+        return;
     }
     User.findOne({username: username}).then(usr=>{
         if(usr.role==='admin'){
@@ -97,6 +104,7 @@ router.post("/approve_shifts", async (req, res) => {
     const username = req.query.username;
     if(!username){
         res.status(401).json({error:"No username given"});
+        return;
     }
     User.findOne({username: username}).then(usr=>{
         if(usr.role==='admin'){
@@ -134,6 +142,7 @@ router.post("/deny_shifts", async (req, res) => {
     const username = req.query.username;
     if(!username){
         res.status(401).json({error:"No username given"});
+        return;
     }
     User.findOne({username: username}).then(usr=>{
         if(usr.role==='admin'){
@@ -170,6 +179,7 @@ router.post("/edit", async function (req, res) {
     const username = req.query.username;
     if(!username){
         res.status(401).json({error:"No username given"});
+        return;
     }
     if (!req.body?.id) {
         res.status(400).json({error: "No id given"});
@@ -216,6 +226,7 @@ router.delete("/delete", async (req, res) => {
     const username = req.query.username;
     if(!username){
         res.status(401).json({error:"No username given"});
+        return;
     }
     User.findOne({username: username}).then(usr=>{
         if(usr.role==='admin'){
