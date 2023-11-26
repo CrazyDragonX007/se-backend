@@ -3,7 +3,6 @@ const router = express.Router();
 const User = require("../models/user");
 const mailer = require("../utils/mailer");
 const passport = require("passport");
-const {isAdmin} = require("../utils/isAdmin");
 
 // Handling user signup
 router.post("/register", async (req, res) => {
@@ -43,8 +42,7 @@ router.post("/register", async (req, res) => {
 
 //Handling user login
 router.post("/login",passport.authenticate("local"), async function(req, res){
-    // const user = req.user;
-    if(req.isAuthenticated){
+    if(req.isAuthenticated()){
       res.status(200).json(req.user);
     }else{
       res.status(400).json({ error: "Some error occurred" });
@@ -62,6 +60,9 @@ router.get("/logout", function (req, res) {
 // Handling edit profile
 router.post("/edit", async function (req, res) {
   const username = req.body.username;
+  if(!username){
+    res.status(401).json({error:"No username given"});
+  }
   const existing_user = await User.findOne({username: username});
   if (existing_user && existing_user.username === username) {
     if(req.body.name) existing_user.name = req.body.name;
@@ -77,10 +78,20 @@ router.post("/edit", async function (req, res) {
 
 // Approval Pending API
 router.get("/pending_approval", async (req,res)=>{
+  const username = req.query.username;
+  if(!username){
+    res.status(401).json({error:"No username given"});
+  }
+  User.findOne({username: username}).then(usr=>{
+    if(usr.role==='admin'){
+      User.find({approved:false,role:'volunteer'}).then((users)=>res.status(200).json(users));
+    }else {
+      return res.status(400).json({error: "not an admin"});
+    }
+  });
   if(req.isAuthenticated()) {
     const adminCheck = await isAdmin(req);
     if (adminCheck) {
-      User.find({approved:false,role:'volunteer'}).then((users)=>res.status(200).json(users));
     }else {
       return res.status(401).json({error: "unauthorized"});
     }
@@ -91,9 +102,36 @@ router.get("/pending_approval", async (req,res)=>{
 
 // Approve API
 router.get("/approve_users",async (req,res)=>{
+  const username = req.query.username;
+  if(!username){
+    res.status(401).json({error:"No username given"});
+  }
+  User.findOne({username: username}).then(usr=>{
+    if(usr.role==='admin'){
+
+    }else {
+      return res.status(400).json({error: "not an admin"});
+    }
+  });
   if(req.isAuthenticated()) {
     const adminCheck = await isAdmin(req);
     if (adminCheck) {
+
+    }else {
+      return res.status(401).json({error: "unauthorized"});
+    }
+  }else {
+    return res.status(400).json({error: "not logged in"});
+  }
+});
+
+router.get("/deny_users",async (req,res)=>{
+  const username = req.query.username;
+  if(!username){
+    res.status(401).json({error:"No username given"});
+  }
+  User.findOne({username: username}).then(usr=>{
+    if(usr.role==='admin'){
       let usernames = req.query.usernames;
       let mails = true;
       if(!Array.isArray(usernames)){
@@ -117,54 +155,23 @@ router.get("/approve_users",async (req,res)=>{
         return res.status(400).json({error:"some mails were not sent"});
       }
     }else {
-      return res.status(401).json({error: "unauthorized"});
+      return res.status(400).json({error: "not an admin"});
     }
-  }else {
-    return res.status(400).json({error: "not logged in"});
-  }
-});
-
-router.get("/deny_users",async (req,res)=>{
-  if(req.isAuthenticated()) {
-    const adminCheck = await isAdmin(req);
-    if (adminCheck) {
-      const usernames = req.query.usernames;
-      let mails = true;
-      for(let i=0;i<usernames.length;i++){
-        User.findOne({username:usernames[i]}).then(async user=>{
-          const subject = "Registration rejected";
-          const body = "Unfortunately, your registration was not approved. Please contact support for assistance.";
-          const mail_sent = await mailer(user.email,subject,body);
-          if(!mail_sent) {
-            mails=false;
-          }
-        }).catch(err=>console.log(err));
-      }
-      if(mails) {
-        User.deleteMany({username:{$in:usernames}}).then(res=>console.log(res));
-        return res.status(200).json({status: "Success"});
-      }else{
-        return res.status(400).json({error:"some mails were not sent, hence no users were deleted."});
-      }
-    }else {
-      return res.status(401).json({error: "unauthorized"});
-    }
-  }else {
-    return res.status(400).json({error: "not logged in"});
-  }
+  });
 });
 
 router.get("/staff_list",async (req,res)=>{
-  if(req.isAuthenticated()) {
-    const adminCheck = await isAdmin(req);
-    if (adminCheck) {
+  const username = req.query.username;
+  if(!username){
+    res.status(401).json({error:"No username given"});
+  }
+  User.findOne({username: username}).then(usr=>{
+    if(usr.role==='admin'){
       User.find({approved: true}).then((users) => res.status(200).json(users));
     }else {
-      return res.status(401).json({error: "unauthorized"});
+      return res.status(400).json({error: "not an admin"});
     }
-  }else {
-    return res.status(400).json({error: "not logged in"});
-  }
+  });
 });
 
 module.exports = router;

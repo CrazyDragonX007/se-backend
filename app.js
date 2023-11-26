@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-// const cors = require('cors');
+const cors = require('cors');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -23,14 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-// app.use(cors());
-// const corsOptions ={
-//     origin:'http://localhost:3000',
-//     credentials:true,            //access-control-allow-credentials:true
-// }
-// app.use(cors(corsOptions));
-// app.use(cors({credentials:true}));
-// app.options('*', cors());
+app.use(cors());
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(require("express-session")({
@@ -41,18 +34,12 @@ app.use(require("express-session")({
 
 app.use(passport.initialize());
 
-passport.use(new LocalStrategy({passReqToCallback: true}, async (req, username, password, done) => {
+passport.use(new LocalStrategy( async (username, password, done) => {
             try {
                 const user = await User.findOne({username: username});
                 if (!user) return done("Incorrect username");
                user.comparePassword(password,(err,isMatch)=>{
                     if(isMatch){
-                        req.logIn(user,err=>{
-                            req.session.save(()=>console.log('x'));
-                            if(err) {
-                                console.log(err);
-                            }
-                        });
                         return done(null, user);
                     }else{
                         return done("Incorrect password");
@@ -70,14 +57,14 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 app.use(passport.session());
 
-app.use(function (req, res, next) {
-    const allowedOrigins = ['https://ec2-3-22-169-1.us-east-2.compute.amazonaws.com'];
-    res.header('Access-Control-Allow-Origin', allowedOrigins);
-    res.header( 'Access-Control-Allow-Headers', 'withCredentials, Access-Control-Allow-Headers, Origin, X-Requested-With, X-AUTHENTICATION, X-IP, Content-Type, Accept, Access-Control-Request-Method, Access-Control-Request-Headers');
-    res.header( 'Access-Control-Allow-Methods', 'GET, OPTIONS, HEAD, POST, PUT, DELETE');
-    res.header( 'Access-Control-Allow-Credentials', true);
-    next();
-});
+// app.use(function (req, res, next) {
+//     // const allowedOrigins = 'http://localhost:3000';
+//     res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+//     res.header( 'Access-Control-Allow-Headers', 'Origin, X-Requested-With, X-AUTHENTICATION, X-IP, Content-Type, Accept');
+//     res.header( 'Access-Control-Allow-Methods', 'GET, OPTIONS, HEAD, POST, PUT, DELETE');
+//     res.header( 'Access-Control-Allow-Credentials', true);
+//     next();
+// });
 
 
 app.use('/', indexRouter);
