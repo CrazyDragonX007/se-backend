@@ -4,6 +4,7 @@ const shiftSchema = new mongoose.Schema({
     title:{type:String,required:true},
     date: {type:Date, required:true},
     startTime: {type: Number, required: true},
+    description:{type: String},
     endTime: {type: Number, required:true},
     location: String,
     req_skills: String,

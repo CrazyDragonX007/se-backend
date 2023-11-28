@@ -87,6 +87,7 @@ router.post("/create", async function (req, res) {
                 startTime: req.body.startTime,
                 endTime: req.body.endTime,
                 location: req.body.location,
+                description: req.body.description,
                 req_skills: req.body.req_skills,
                 max_volunteers: req.body.max_volunteers
             }).then(shift => res.status(200).json(shift)).catch(e => {
@@ -194,6 +195,7 @@ router.post("/edit", async function (req, res) {
                     if (req.body.endTime) shift.endTime = req.body.endTime;
                     if (req.body.location) shift.location = req.body.location;
                     if (req.body.req_skills) shift.req_skills = req.body.req_skills;
+                    if (req.body.description) shift.description = req.body.description;
                     if (req.body.max_volunteers) shift.max_volunteers = req.body.max_volunteers;
                     shift.save();
                     if (shift.assignedVolunteers.length > 0) {
