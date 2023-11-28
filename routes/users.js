@@ -91,44 +91,10 @@ router.get("/pending_approval", async (req,res)=>{
       return res.status(400).json({error: "not an admin"});
     }
   });
-  if(req.isAuthenticated()) {
-    const adminCheck = await isAdmin(req);
-    if (adminCheck) {
-    }else {
-      return res.status(401).json({error: "unauthorized"});
-    }
-  }else {
-      return res.status(400).json({error: "not logged in"});
-  }
 });
 
 // Approve API
 router.get("/approve_users",async (req,res)=>{
-  const username = req.query.username;
-  if(!username){
-    res.status(401).json({error:"No username given"});
-    return;
-  }
-  User.findOne({username: username}).then(usr=>{
-    if(usr.role==='admin'){
-
-    }else {
-      return res.status(400).json({error: "not an admin"});
-    }
-  });
-  if(req.isAuthenticated()) {
-    const adminCheck = await isAdmin(req);
-    if (adminCheck) {
-
-    }else {
-      return res.status(401).json({error: "unauthorized"});
-    }
-  }else {
-    return res.status(400).json({error: "not logged in"});
-  }
-});
-
-router.get("/deny_users",async (req,res)=>{
   const username = req.query.username;
   if(!username){
     res.status(401).json({error:"No username given"});
@@ -162,6 +128,30 @@ router.get("/deny_users",async (req,res)=>{
       return res.status(400).json({error: "not an admin"});
     }
   });
+});
+
+router.get("/deny_users",async (req,res)=>{
+  const username = req.query.username;
+  if(!username){
+    return res.status(401).json({error:"No username given"});
+  }
+  let mails = true;
+  for(let i=0;i<usernames.length;i++){
+    User.findOne({username:usernames[i]}).then(async user=>{
+      const subject = "Registration rejected";
+      const body = "Unfortunately, your registration was not approved. Please contact support for assistance.";
+      const mail_sent = await mailer(user.email,subject,body);
+      if(!mail_sent) {
+        mails=false;
+      }
+    }).catch(err=>console.log(err));
+  }
+  if(mails) {
+    User.deleteMany({username:{$in:usernames}}).then(res=>console.log(res));
+    return res.status(200).json({status: "Success"});
+  }else{
+    return res.status(400).json({error:"some mails were not sent, hence no users were deleted."});
+  }
 });
 
 router.get("/staff_list",async (req,res)=>{
