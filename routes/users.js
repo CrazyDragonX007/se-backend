@@ -135,7 +135,11 @@ router.get("/deny_users",async (req,res)=>{
   if(!username){
     return res.status(401).json({error:"No username given"});
   }
+  let usernames = req.query.usernames;
   let mails = true;
+  if(!Array.isArray(usernames)){
+    usernames = new Array([usernames])
+  }
   for(let i=0;i<usernames.length;i++){
     User.findOne({username:usernames[i]}).then(async user=>{
       const subject = "Registration rejected";
