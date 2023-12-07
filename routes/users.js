@@ -4,6 +4,8 @@ const User = require("../models/user");
 const mailer = require("../utils/mailer");
 const passport = require("passport");
 
+let pcode = 0;
+
 // Handling user signup
 router.post("/register", async (req, res) => {
   const username = req.body.username;
@@ -161,8 +163,7 @@ router.get("/deny_users",async (req,res)=>{
 router.get("/staff_list",async (req,res)=>{
   const username = req.query.username;
   if(!username){
-    res.status(401).json({error:"No username given"});
-    return;
+    return res.status(401).json({error:"No username given"});
   }
   User.findOne({username: username}).then(usr=>{
     if(usr.role==='admin'){
@@ -172,5 +173,44 @@ router.get("/staff_list",async (req,res)=>{
     }
   });
 });
+
+function randomPassword() {
+  return Math.random().toString(36).slice(2) + Math.random().toString(36).toUpperCase().slice(2);
+}
+
+router.get("/request_code",(req,res)=>{
+  const username = req.query.username;
+  if(!username){
+    return res.status(401).json({error:"No username given"});
+  }
+  User.findOne({username:username}).then(user=>{
+    pcode = Math.floor(Math.random()*10000);
+    const subject = "Password change request";
+    const body = "This is the code for your request for changing password "+pcode;
+    mailer(user.email,subject,body);
+    res.status(200).json({code:pcode});
+  })
+})
+
+router.get("/forgot_password",(req,res)=>{
+  const {username,code} = req.query;
+  if(!username){
+    return res.status(401).json({error:"No username given"});
+  }
+  if(!code){
+    return res.status(400).json({error:"No code given"});
+  }else if(parseInt(code)!==pcode){
+    return res.status(400).json({error:'Invalid code'});
+  }
+  User.findOne({username:username}).then(user=>{
+    const newpass = randomPassword();
+    user.password = newpass;
+    user.save();
+    const subject = "New Password";
+    const body = 'Here is your new password ' + '"'+newpass+'"' + '.Kindly login and change your password for additional security.';
+    mailer(user.email,subject,body);
+    return res.status(200).json({status:'success'})
+  })
+})
 
 module.exports = router;
