@@ -285,5 +285,32 @@ router.get('/history',async (req,res)=>{
     res.status(200).json(result);
 });
 
+router.get('/upcoming',async (req,res)=>{
+    const username = req.query.username;
+    if(!username){
+        return res.status(401).json({error:"No username given"});
+    }
+    const result = [];
+    const usr = await User.findByUsername(username);
+    const shifts =  await Shift.find();
+    const date = new Date();
+    const d1 = date.getDate();
+    const d2 = date.getMonth();
+    const d3 = date.getFullYear();
+    shifts.forEach(s=>{
+            const sd = new Date(s.date);
+            const c1 = sd.getDate();
+            const c2 = sd.getMonth();
+            const c3 = sd.getFullYear();
+
+            if(s.assignedVolunteers.indexOf(usr._id)> -1){
+                if(c3 > d3 || (c3 === d3 && c2 > d2) || (c3 === d3 && c2 === d2 && c1 > d1)) {
+                    result.push(s);
+                }
+            }
+        });
+    res.status(200).json(result);
+});
+
 module.exports = router;
 
