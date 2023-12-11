@@ -167,7 +167,7 @@ router.get("/staff_list",async (req,res)=>{
   }
   User.findOne({username: username}).then(usr=>{
     if(usr.role==='admin'){
-      User.find({approved: true}).then((users) => res.status(200).json(users));
+      User.find({approved: true,role: 'volunteer'}).then((users) => res.status(200).json(users));
     }else {
       return res.status(400).json({error: "not an admin"});
     }

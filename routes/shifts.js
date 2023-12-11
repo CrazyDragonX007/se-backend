@@ -302,7 +302,6 @@ router.get('/upcoming',async (req,res)=>{
             const c1 = sd.getDate();
             const c2 = sd.getMonth();
             const c3 = sd.getFullYear();
-
             if(s.assignedVolunteers.indexOf(usr._id)> -1){
                 if(c3 > d3 || (c3 === d3 && c2 > d2) || (c3 === d3 && c2 === d2 && c1 > d1)) {
                     result.push(s);
